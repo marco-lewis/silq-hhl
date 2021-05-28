@@ -1,0 +1,141 @@
+import utils;
+
+def control_rot(
+    const eigen_qs:uint[2],
+    const approx: !N^(2), 
+    const C:!R,
+    anc:B, 
+    )mfree{
+    for j in [0..2){
+        if eigen_qs == approx[j]{
+            anc := rotY(2 * asin(C * approx[j]/ 4), anc);
+        }
+    }
+
+    return anc;
+}
+
+def U(const ctrl:B, const t:!R, const mb:!R, b:B)mfree{
+    p := mb * t;
+
+    if b{
+        phase(π/2);
+    }
+
+    if ctrl{
+        b := X(b);
+    }
+    b := rotY(p, b);
+
+    if ctrl{
+        b := X(b);
+    }
+    b := rotY(-p, b);
+
+    if b{
+        phase(3*π/2);
+    }
+    return b;
+}
+
+// PROBLEM: Can't reset the phase of the quantum state - send an email to Benjamin
+
+def hhl[](
+    ma :!R,
+    mb :!R,
+    θ:!R,
+    t :!R,
+    C :!R,
+    λs :!R^2
+    ){
+    repeat_loop := true;
+    fails := 0;
+    approx_λ := vector(2, 0:!N);
+    for i in [0..2) { approx_λ[i] = floor(4 * λs[i] * C) coerce !N; }
+
+    while (repeat_loop){
+        // Prep b
+        b := 0:B;
+        b := rotY(2 * θ, b);
+
+        reg_λ := 0:uint[2];
+        anc := 0 :B;
+
+        // QPE
+        for i in [0..2) { reg_λ[i] := H(reg_λ[i]); }
+        
+        if reg_λ[0]{
+            phase(ma * t);
+        }
+        if reg_λ[1]{
+            phase(ma * t * 2);
+        }
+        b := u3(mb * t, -π/2, π/2, b);
+
+        b := U(reg_λ[0], t, mb, b);
+        b := U(reg_λ[1], 2*t, mb, b);
+
+        reg_λ := reverse(qft[2])(reg_λ);
+        // Controlled rotation
+        anc := control_rot(reg_λ, approx_λ, C, anc);
+
+        // Inverse QPE
+        reg_λ := qft[2](reg_λ);
+        b := reverse(U)(reg_λ[1], 2*t, mb, b);
+        b := reverse(U)(reg_λ[0], t, mb, b);
+        b := reverse(u3)(mb * t, -π/2, π/2, b);
+
+        if reg_λ[1]{
+            phase(-ma * t * 2);
+        }
+        if reg_λ[0]{
+            phase(-ma * t);
+        }
+
+        for i in [0..2) { reg_λ[i] := H(reg_λ[i]); }
+
+        // Measure result - for now throw an error if fail
+        // On measurement of 1, reg_λ should be in the 0 state
+        repeat_loop = ¬(measure(anc));
+        if (repeat_loop){
+            measure(b);
+            fails += 1;
+        }
+        else {
+            // b := H(b);
+            dump();
+            res := measure(b);
+            print(res);
+        }
+        measure(reg_λ);
+    }
+    print(fails);
+}
+
+def main(){
+     ma := 1;
+    mb := 1;
+    θ := π/4; // b = K (1,1)
+    t := 2 * π * (1/4);
+    C := t/(2*π);
+    λs := [0, 2] coerce !R^2;
+    hhl(ma, mb, θ, t, C, λs);
+}
+
+// Examples
+// Should return 0 when measured in the Hadamard basis
+//  ma := 1;
+//     mb := 1;
+//     θ := π/4; // b = K (1,1)
+//     t := 2 * π * (1/4);
+//     C := t/(2*π);
+//     λs := [0, 2] coerce !R^2;
+// Change theta to 3*π/4 to get 1 when measured
+
+// Online qiskit example
+// ma := 1;
+// mb := -1/3;
+// θ := π/4;
+// t := 2 * π * (3/8);
+// C := t/(2*π);
+// λs := [2/3, 4/3] coerce !R^2;

@@ -1,0 +1,10 @@
+// Not def. based on O(s) algorithm, but will do
+def A (i:!N, j:!N):!Q{
+    if (i == j && i < 2){
+        return 1;
+    }
+    if ¬(i == j) && i < 2{
+        return -1/3;
+    }
+    return 0;
+}

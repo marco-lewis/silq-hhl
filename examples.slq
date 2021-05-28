@@ -1,0 +1,83 @@
+import utils;
+
+// TODO: Lookup hamiltonian simulation and implement U = e^iAt
+// Check reversing of ham op.
+
+// LIMITS: Reversing hamiltonian simulation?
+
+// def U[n:!N](
+//     const b :B,
+//     const t:!R,
+//     q:uint[n])
+//     mfree:uint[n]
+// {
+//     return q;
+// }
+
+// 2x2 - A example with A = [[a,b],[b,a]]
+def U2x2[n:!N](const ctrl:B, const i:!R, const t:!R, const ma:!R, const mb:!R, q:uint[n])mfree{
+    p := (2^i) * mb * t;
+    (b) := (q[0]);
+    q[0] := cnot(b,q[0]);
+
+    if ctrl{
+        phase(ma * t);
+    }
+
+    if (i == 0){
+        b := u3(p, -π/2, π/2, b); // Might not need this
+    }
+
+    if b{
+        phase(π/2);
+    }
+
+    if ctrl{
+        b := X(b);
+    }
+    b := rotY(p, b);
+
+    if ctrl{
+        b := X(b);
+    }
+    b := rotY(-p, b);
+
+    if b{
+        phase(3*π/2);
+    }
+
+    q[0] := cnot(b,q[0]);
+    forget(b=q[0]);
+    
+    return q;
+}
+
+// A = [[1,-1/3],[-1/3,1]]
+def hamU2x2A[n:!N](const ctrl:B, const i:!R, const t:!R, q:uint[n])mfree{
+    q := U2x2(ctrl, i, t, 1, -1/3, q);
+    return q;
+}
+
+def orB2x2A[n:!N](b:uint[n])mfree{
+    return b;
+}
+
+def m2X2A[n:!N](b:uint[n])mfree{
+    b := H_n[n](b);
+    return b;
+}
+
+// B = [[1,1],[1,1]]
+def hamU2x2B[n:!N](const ctrl:B, const i:!R, const t:!R, q:uint[n])mfree{
+    q := U2x2(ctrl, i, t, 1, 1, q);
+    return q;
+}
+
+def orB2x2B[n:!N](b:uint[n])mfree{
+    b := H_n[n](b);
+    return b;
+}
+
+def m2X2B[n:!N](b:uint[n])mfree{
+    return b;
+}

@@ -1,0 +1,87 @@
+import utils;
+import examples;
+
+// Inputs:
+// t - time parameter
+// approx_λ - eigenvalues of A - assume fractions
+// orB - oracle that can prepare the vector b from an initial qubit state
+// hamU - implementation of hamiltonian operator hamU(ctrl, i, t, b)
+// revhamU - temporary implementation of reverse of hamU
+// M - measurement operator to be applied before measuring
+def hhl[n:!N, prec:!N](
+    const t :!R,
+    const approx_λ : !N^(2^n),
+    const orB : uint[n] -> mfree uint[n],
+    const hamU: const B × const !R × const !R × uint[n] ->mfree uint[n],
+    const revhamU: const B × const !R × const !R × uint[n] ->mfree uint[n],
+    const M : uint[n] -> mfree uint[n])
+{
+ 
+    repeat_loop := true:!B;
+    out := 0:!uint[n];
+
+    while (repeat_loop){
+        // Registering qubits
+        b_q := 0:uint[n];
+        eigen_qs := 0:uint[prec];
+        anc := 0:B;
+
+        // Init b
+        b_q := orB(b_q);
+
+        // QPE
+        eigen_qs := H_n[prec](eigen_qs);
+        b_q := qpe_ham_loop[n, prec](eigen_qs, t, hamU, b_q);
+        eigen_qs := reverse(qft[prec])(eigen_qs);
+        
+        // Controlled rotation
+        anc := control_rot[n, prec](eigen_qs, approx_λ, t/(2*π), anc);
+
+        // Inverse QPE
+        eigen_qs := qft[prec](eigen_qs);
+        b_q := qpe_ham_loop[n, prec](eigen_qs, t, revhamU, b_q);
+        eigen_qs := H_n[prec](eigen_qs);
+        
+        // Measure ancillary
+        repeat_loop = ¬measure(anc);
+        
+        measure(eigen_qs);
+        if repeat_loop{
+            // Reset state
+            measure(b_q);
+        }
+        else {
+            // Measurement if successful
+            b_q := M(b_q);
+            // dump();
+            out = measure(b_q);
+        }
+    }
+
+    return out;
+}
+
+def main(){
+    n := 1;
+    prec := 2;
+ 
+    // Values for A
+    // λs := [2/3, 4/3] coerce !R^(2);
+    // t := 2 * π * (3/8);
+
+    // Values for B
+    λs := [0, 2] coerce !R^2;
+    t := 2 * π * (1/4);
+    
+    // Change depending on size and number
+    approx_λ := vector(2^n, 0:!N);
+    for i in [0..2) { approx_λ[i] = floor(4 * λs[i] * (t/(2*π))) coerce !N; }
+
+    results := vector(2, 0:!N);
+    for i in [0..1){
+        print(i);
+        res := hhl[n, prec](t, approx_λ, orB2x2B[n], hamU2x2B[n], reverse(hamU2x2B[n]), m2X2B[n]);
+        results[res] += 1;
+    }
+    print(results);
+}
