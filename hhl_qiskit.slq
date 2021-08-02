@@ -38,7 +38,7 @@ def U(const ctrl:B, const t:!R, const mb:!R, b:B)mfree{
     return b;
 }
 
-// PROBLEM: Can't reset the phase of the quantum state - send an email to Benjamin
+// PROBLEM: Can't reset the phase of the quantum state
 
 def hhl[](
     ma :!R,
