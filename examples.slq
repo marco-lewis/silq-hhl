@@ -81,3 +81,19 @@ def orB2x2B[n:!N](b:uint[n])mfree{
 def m2X2B[n:!N](b:uint[n])mfree{
     return b;
 }
+
+// C = [[4,3][3,4]]
+def hamU2x2C[n:!N](const ctrl:B, const i:!R, const t:!R, q:uint[n])mfree{
+    q := U2x2(ctrl, i, t, 4, 3, q);
+    return q;
+}
+
+def orB2x2C[n:!N](b:uint[n])mfree{
+    for i in [0..n) { b[i] := X(b[i]); };
+    b := H_n[n](b);
+    return b;
+}
+
+def m2X2C[n:!N](b:uint[n])mfree{
+    return H_n[n](b);
+}

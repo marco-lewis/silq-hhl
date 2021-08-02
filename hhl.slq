@@ -52,8 +52,9 @@ def hhl[n:!N, prec:!N](
         }
         else {
             // Measurement if successful
+            dump();
             b_q := M(b_q);
-            // dump();
+            dump();
             out = measure(b_q);
         }
     }
@@ -70,17 +71,21 @@ def main(){
     // t := 2 * π * (3/8);
 
     // Values for B
-    λs := [0, 2] coerce !R^2;
-    t := 2 * π * (1/4);
-    
+    // λs := [0, 2] coerce !R^2;
+    // t := 2 * π * (1/4);
+
+    // Values for C?
+    λs := [1, 7] coerce !R^2;
+    t := 2 * π * (1/2);
+
     // Change depending on size and number
     approx_λ := vector(2^n, 0:!N);
-    for i in [0..2) { approx_λ[i] = floor(4 * λs[i] * (t/(2*π))) coerce !N; }
+    for i in [0..2^n) { approx_λ[i] = floor((2^prec) * λs[i] * (t/(2*π))) coerce !N; }
 
     results := vector(2, 0:!N);
     for i in [0..1){
         print(i);
-        res := hhl[n, prec](t, approx_λ, orB2x2B[n], hamU2x2B[n], reverse(hamU2x2B[n]), m2X2B[n]);
+        res := hhl[n, prec](t, approx_λ, orB2x2C[n], hamU2x2C[n], reverse(hamU2x2C[n]), m2X2C[n]);
         results[res] += 1;
     }
     print(results);
