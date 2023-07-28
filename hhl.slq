@@ -6,15 +6,13 @@ import examples;
 // approx_λ - eigenvalues of A - assume fractions
 // orB - oracle that can prepare the vector b from an initial qubit state
 // hamU - implementation of hamiltonian operator hamU(ctrl, i, t, b)
-// revhamU - temporary implementation of reverse of hamU
 // M - measurement operator to be applied before measuring
 def hhl[n:!N, prec:!N](
     const t :!R,
     const approx_λ : !N^(2^n),
-    const orB : uint[n] -> mfree uint[n],
-    const hamU: const B × const !R × const !R × uint[n] ->mfree uint[n],
-    const revhamU: const B × const !R × const !R × uint[n] ->mfree uint[n],
-    const M : uint[n] -> mfree uint[n])
+    const orB : uint[n] !-> mfree uint[n],
+    const hamU: const B × const !R × const !R × uint[n] !->mfree uint[n],
+    const M : uint[n] !-> mfree uint[n])
 {
  
     repeat_loop := true:!B;
@@ -39,7 +37,7 @@ def hhl[n:!N, prec:!N](
 
         // Inverse QPE
         eigen_qs := qft[prec](eigen_qs);
-        b_q := qpe_ham_loop[n, prec](eigen_qs, t, revhamU, b_q);
+        b_q := qpe_ham_loop[n, prec](eigen_qs, t, reverse(hamU), b_q);
         eigen_qs := H_n[prec](eigen_qs);
         
         // Measure ancillary
@@ -85,7 +83,7 @@ def main(){
     results := vector(2, 0:!N);
     for i in [0..1){
         print(i);
-        res := hhl[n, prec](t, approx_λ, orB2x2C[n], hamU2x2C[n], reverse(hamU2x2C[n]), m2X2C[n]);
+        res := hhl[n, prec](t, approx_λ, orB2x2C[n], hamU2x2C[n], m2X2C[n]);
         results[res] += 1;
     }
     print(results);

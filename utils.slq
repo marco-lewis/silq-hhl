@@ -47,7 +47,7 @@ def qft[n:!ℕ](ψ: uint[n])mfree: uint[n]{
 def qpe_ham_loop[n:!N, prec:!N](
     const ctrl:uint[prec],
     const t:!R,
-    const hamU: const B × const !R × const !R × uint[n] ->mfree uint[n],
+    const hamU: const B × const !R × const !R × uint[n] !->mfree uint[n],
     q:uint[n])
     mfree
 {
